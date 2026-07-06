@@ -100,6 +100,6 @@ help:
 	@echo "Example:"
 	@echo "  make clean && make"
 	@echo "  sudo make install"
-	@echo "  sarsat_t001 -f 403000000 -g -10 -m 0"
+	@echo "  sarsat_t001 -f 431975000 -g -10 -m 0"
 
 .PHONY: all clean install uninstall run debug help directories

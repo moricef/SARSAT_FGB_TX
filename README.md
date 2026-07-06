@@ -1,188 +1,240 @@
 # COSPAS-SARSAT T.001 Beacon Transmitter
 
-Simulateur d'émetteur de balise COSPAS-SARSAT T.001 (1ère génération) pour formation ADRASEC.
+ADALM-Pluto based COSPAS-SARSAT T.001 first-generation beacon transmitter for local training and decoder validation.
 
-## 📋 Caractéristiques
+## Status
 
-### Protocole T.001
-- **Modulation** : BPSK (Biphase-L / Manchester)
-- **Débit** : 400 baud
-- **Fréquence** : 403 MHz (formation) / 406 MHz (réel)
-- **Trame** : 144 bits (15 préambule + 9 sync + 120 données + BCH)
-- **Timing** : 160 ms porteuse + 360 ms données
+- Builds on Linux with `gcc` and `libiio`.
+- Generates a 144-bit T.001 long message with BCH1/BCH2 validation.
+- Transmits Biphase-L / Manchester BPSK I/Q through PlutoSDR.
+- Default RF frequency: `431975000 Hz` (`431.975 MHz`).
+- Pluto sample rate: `2457600 sps`, exactly `6400 * 384`, so 400 baud timing is exact.
+- Real-time GPS input is available with `-gps`.
+- GPIO PA/relay/LED code exists, but the main TX path currently leaves GPIO disabled because of permission issues.
 
-### Hardware
-- **Platform** : Odroid C2 / Odroid C4 (ARM64, Armbian)
-- **SDR** : ADALM-PLUTO (PlutoSDR) via USB
-- **RF** : PA 5W + relais TX/RX + LEDs
+## Safety
 
-### Signaux générés
-- **Baseband** : 6400 Hz (16 samples/bit)
-- **PlutoSDR** : 2.5 MSPS (interpolation x390.625)
-- **I/Q** : BPSK ±1.1 rad (conforme T.001, I=A·cos(φ), Q=A·sin(φ))
+This software can drive RF hardware. Use only frequencies, power levels, antennas, and environments for which you are authorized.
 
-## 🔧 Dépendances
+Do not transmit on 406 MHz distress-beacon frequencies unless you are using certified equipment and have explicit authorization. The default `431.975 MHz` value is intended for local test setups.
 
-### Logicielles
+## Features
+
+- T.001 long frame: 144 bits.
+- Carrier phase: 160 ms unmodulated carrier, then 360 ms data.
+- Modulation: BPSK with +/- 1.1 rad phase deviation.
+- Baseband: 400 baud, 16 samples per bit, 6400 Hz.
+- Pluto I/Q: 2.4576 MSPS, integer interpolation factor 384.
+- BCH1 polynomial: `0x26D9E3`.
+- BCH2 polynomial: `0x1539`, with a 13-bit working register mask `0x1FFF`; the transmitted field is 12 bits.
+- GPS NMEA parser for GGA/RMC.
+- Offline IQ generator: `bin/generate_iq_file`.
+
+## Requirements
+
 ```bash
 sudo apt update
 sudo apt install -y build-essential libiio-dev libiio-utils git
 ```
 
-### Matérielles
-- PlutoSDR connecté via USB
-- GPIO Odroid configurés :
-  - GPIO 230 : PA enable
-  - GPIO 231 : Relais TX/RX
-  - GPIO 232 : LED status
-  - GPIO 233 : LED TX
+Hardware:
 
-## 🚀 Compilation
+- ADALM-Pluto / PlutoSDR reachable at `ip:192.168.2.1`.
+- Optional GPS receiver exposed as a Linux serial device.
+- Optional Odroid GPIO wiring for PA, TX/RX relay, and LEDs.
+
+## Build
 
 ```bash
-cd /home/fab2/Developpement/COSPAS-SARSAT/ADALM-PLUTO/SARSAT_T001
 make clean && make
 ```
 
-## 📡 Utilisation
+Build the offline IQ generator:
 
-### Mode test (403 MHz, faible puissance)
 ```bash
-sudo ./bin/sarsat_t001 -f 403000000 -g -10 -m 1 -t 120
+make -f Makefile.generate_iq
 ```
 
-### Mode exercice (403 MHz, GPS temps réel)
+## Usage
+
+Default configuration:
+
 ```bash
-sudo ./bin/sarsat_t001 -f 403000000 -g 0 -m 0 -lat 48.8566 -lon 2.3522 -alt 35
+./bin/sarsat_t001
 ```
 
-### Options
-```
--f <freq>     Fréquence en Hz (défaut: 403000000)
--g <gain>     Gain TX en dB (défaut: -10)
--i <id>       Beacon ID en hexa (défaut: 0x123456)
--m <mode>     Mode: 0=exercice, 1=test (défaut: 0)
--t <sec>      Intervalle TX en secondes (défaut: 60)
--lat <lat>    Latitude (défaut: 42.95463)
--lon <lon>    Longitude (défaut: 1.364479)
--alt <alt>    Altitude en mètres (défaut: 1080)
--h            Aide
-```
+Known-good local test command:
 
-## 🔍 Validation du signal
-
-### Vérification PlutoSDR
 ```bash
-iio_info -u ip:192.168.2.1
+./bin/sarsat_t001 -f 431975000 -m 1 -g 0 -t 5
 ```
 
-### Réception avec SDR
-- **NFM** : 403.037 MHz, BW 12.5 kHz
-- **USB** : 403.0365 MHz
-- **Décodeur** : SARBeacon, Cospas-Sarsat Decoders
+Lower-power local test:
 
-### Analyse spectrale
 ```bash
-iio_readdev -u ip:192.168.2.1 -s 2500000 cf-ad9361-lpc | csdr ...
+./bin/sarsat_t001 -f 431975000 -m 1 -g -10 -t 5
 ```
 
-## 📂 Structure du projet
+Exercise mode with fixed position:
 
+```bash
+./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 60 -lat 42.95463 -lon 1.364479 -alt 1080
 ```
-SARSAT_T001/
+
+Exercise mode with real-time GPS:
+
+```bash
+./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 60
+```
+
+Options:
+
+```text
+-f <freq>        Frequency in Hz (default: 431975000)
+-g <gain>        AD9361 TX hardware gain in dB (default: -10, 0 = max output)
+-i <id>          Beacon ID in hex (default: 0x123456)
+-m <mode>        Mode: 0=exercise, 1=test (default: 0)
+-t <sec>         Wait time after each transmission (default: 60)
+-lat <lat>       Latitude (default: 42.95463)
+-lon <lon>       Longitude (default: 1.364479)
+-alt <alt>       Altitude in meters (default: 1080)
+-gps             Enable real-time GPS, overriding fixed lat/lon/alt
+-gps-uart <dev>  GPS serial device (default: /dev/ttyS1)
+-h               Show help
+```
+
+Note: `-t` is the sleep time after a blocking transmission. The start-to-start interval is therefore roughly `-t` plus the burst duration and margins.
+
+## Offline IQ Generation
+
+Generate a complex64 IQ file at 40 kS/s:
+
+```bash
+bin/generate_iq_file -o /tmp/sarsat_t001.iq -s 40000
+```
+
+The generator uses the same `build_t001_frame()` path as the transmitter, so its frame content stays aligned with the live TX code.
+
+## Project Layout
+
+```text
+SARSAT_FGB/
 ├── src/
-│   ├── main.c                  # Application principale
-│   ├── t001_protocol.c         # Protocole T.001 (BCH, GPS, trame)
-│   ├── biphase_modulator.c     # Modulation Biphase-L + I/Q
-│   ├── pluto_control.c         # Contrôle PlutoSDR (libiio)
-│   └── gpio_control.c          # Contrôle GPIO (PA, relais, LEDs)
+│   ├── main.c
+│   ├── t001_protocol.c
+│   ├── biphase_modulator.c
+│   ├── bessel_filter.c
+│   ├── pluto_control.c
+│   ├── gpio_control.c
+│   └── gps_nmea.c
 ├── include/
 │   ├── t001_protocol.h
 │   ├── biphase_modulator.h
+│   ├── bessel_filter.h
 │   ├── pluto_control.h
-│   └── gpio_control.h
+│   ├── gpio_control.h
+│   └── gps_nmea.h
 ├── Makefile
+├── Makefile.generate_iq
 └── README.md
 ```
 
-## 🧪 Tests
+## Validation Notes
 
-### Test 1: Validation protocole
+- `validate_t001_frame()` checks BCH1 and BCH2 before transmission.
+- Recent local decoder runs at `431.975 MHz` showed stable FGB decoding with `CRC1=OK CRC2=OK` on the received bursts.
+- The Bessel IIR is configured for a 2.2 kHz cutoff at 2.4576 MSPS and was tuned to keep the phase-transition rise time in the target range.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+---
+
+# Emetteur COSPAS-SARSAT T.001
+
+Emetteur de balise COSPAS-SARSAT T.001 de premiere generation base sur ADALM-Pluto, destine aux essais locaux et a la validation de decodeurs.
+
+## Etat
+
+- Compilation Linux avec `gcc` et `libiio`.
+- Generation d'une trame longue T.001 de 144 bits avec validation BCH1/BCH2.
+- Emission I/Q PlutoSDR en BPSK Biphase-L / Manchester.
+- Frequence RF par defaut : `431975000 Hz` (`431.975 MHz`).
+- Sample-rate Pluto : `2457600 sps`, soit exactement `6400 * 384`, pour un debit exact de 400 bauds.
+- GPS temps reel disponible avec `-gps`.
+- Le code GPIO PA/relais/LED existe, mais le chemin TX principal le laisse desactive a cause de problemes de droits.
+
+## Securite
+
+Ce logiciel peut piloter du materiel RF. Utiliser uniquement des frequences, puissances, antennes et environnements pour lesquels vous etes autorise.
+
+Ne pas emettre sur les frequences de detresse 406 MHz sans equipement certifie et autorisation explicite. La valeur par defaut `431.975 MHz` est prevue pour les essais locaux.
+
+## Compilation
+
 ```bash
-./bin/sarsat_t001 -h  # Affiche la trame générée
+sudo apt update
+sudo apt install -y build-essential libiio-dev libiio-utils git
+make clean && make
 ```
 
-### Test 2: Transmission simple
+Generateur IQ hors-ligne :
+
 ```bash
-sudo ./bin/sarsat_t001 -f 403000000 -g -10 -m 1 -t 5
+make -f Makefile.generate_iq
 ```
 
-### Test 3: Validation BCH
-Le programme vérifie automatiquement les codes BCH avant transmission :
-- BCH1 (21 bits) pour PDF-1 (bits 25-85)
-- BCH2 (12 bits) pour PDF-2 (bits 107-132)
+## Utilisation
 
-## 📊 Spécifications techniques
+Commande de test local validee :
 
-### T.001 Frame Structure
-| Bits | Champ | Description |
-|------|-------|-------------|
-| 1-15 | Preamble | 15 bits à 1 (détection porteuse) |
-| 16-24 | Sync | 000101111 (normal) / 011010000 (test) |
-| 25 | Format | 1 = message long |
-| 26 | Protocol | 0 = protocole localisation |
-| 27-36 | Country | Code pays (227 = France) |
-| 37-40 | Protocol | Type balise (9 = ELT-DT) |
-| 41-66 | Beacon ID | Identifiant unique 26 bits |
-| 67-85 | Position | Position GPS 19 bits (30 min res) |
-| 86-106 | BCH1 | Code correcteur 21 bits |
-| 107-108 | Activation | Type d'activation |
-| 109-112 | Altitude | Code altitude 4 bits |
-| 113-114 | Freshness | Âge position |
-| 115-132 | Offset | Offset position 18 bits (4 sec res) |
-| 133-144 | BCH2 | Code correcteur 12 bits |
-
-### BCH Polynomials (T.001 Annex B)
-- **BCH1** : `0x26D9E3` (22 bits, degree 21)
-- **BCH2** : `0x1539` (13 bits, degree 12)
-
-## 🔒 Sécurité
-
-⚠️ **ATTENTION** :
-- **403 MHz** : Autorisé uniquement pour formation/exercice
-- **406 MHz** : Réservé aux balises homologuées (urgences réelles)
-- Respecter la réglementation ANFR (France) / FCC (USA)
-- Ne jamais émettre sur 406 MHz sans autorisation
-
-## 📚 Références
-
-- **COSPAS-SARSAT T.001** : Specification for COSPAS-SARSAT 406 MHz Distress Beacons
-- **PlutoSDR** : Analog Devices ADALM-PLUTO
-- **libiio** : Analog Devices IIO Library
-
-## 🐛 Dépannage
-
-### PlutoSDR non détecté
 ```bash
-sudo iio_info
-# Vérifier USB : lsusb | grep "Analog Devices"
+./bin/sarsat_t001 -f 431975000 -m 1 -g 0 -t 5
 ```
 
-### Erreur GPIO
+Test a puissance plus faible :
+
 ```bash
-# Vérifier les numéros GPIO pour votre Odroid
-ls /sys/class/gpio/
+./bin/sarsat_t001 -f 431975000 -m 1 -g -10 -t 5
 ```
 
-### Signal faible
-- Vérifier PA enable (GPIO 230)
-- Vérifier relais TX/RX (GPIO 231)
-- Augmenter gain TX : `-g 0` (max +7 dBm PlutoSDR)
+Mode exercice avec position fixe :
 
-## 📝 TODO
+```bash
+./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 60 -lat 42.95463 -lon 1.364479 -alt 1080
+```
 
-## 🤝 Contribution
+Mode exercice avec GPS temps reel :
 
-## 📄 Licence
+```bash
+./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 60
+```
 
-Ce projet est distribué sous licence MIT. Voir [LICENSE](LICENSE).
+Options :
+
+```text
+-f <freq>        Frequence en Hz (defaut : 431975000)
+-g <gain>        Gain TX AD9361 en dB (defaut : -10, 0 = puissance max)
+-i <id>          Identifiant balise en hexadecimal (defaut : 0x123456)
+-m <mode>        Mode : 0=exercice, 1=test (defaut : 0)
+-t <sec>         Attente apres chaque emission (defaut : 60)
+-lat <lat>       Latitude (defaut : 42.95463)
+-lon <lon>       Longitude (defaut : 1.364479)
+-alt <alt>       Altitude en metres (defaut : 1080)
+-gps             Active le GPS temps reel
+-gps-uart <dev>  Port serie GPS (defaut : /dev/ttyS1)
+-h               Aide
+```
+
+## Generation IQ
+
+```bash
+bin/generate_iq_file -o /tmp/sarsat_t001.iq -s 40000
+```
+
+Le generateur utilise le meme chemin `build_t001_frame()` que l'emetteur, afin d'eviter les trames codees en dur obsoletes.
+
+## Licence
+
+MIT. Voir [LICENSE](LICENSE).

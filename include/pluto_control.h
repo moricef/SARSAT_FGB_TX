@@ -15,7 +15,7 @@
 #define PLUTO_BUFFER_SIZE 16384      // TX buffer size (samples)
 
 // Frequency settings
-#define PLUTO_FREQ_TRAINING 403000000ULL  // 403 MHz (training/exercise)
+#define PLUTO_FREQ_TRAINING 431975000ULL  // 431.975 MHz (local test/training)
 #define PLUTO_FREQ_REAL     406000000ULL  // 406 MHz (real emergency)
 
 // Sample rate: exact multiple of 6400 Hz baseband for exact 400 baud timing.

@@ -50,7 +50,7 @@ app_config_t default_config = {
     .longitude = 1.364479,
     .altitude = 1080,
     .beacon_id = 0x123456,       // Example beacon ID
-    .frequency = 403000000ULL,   // 403 MHz (training)
+    .frequency = 431975000ULL,   // 431.975 MHz local test frequency
     .tx_gain_db = -10,           // Low power for training
     .mode = 0,                   // Exercise mode
     .tx_interval_sec = 60,       // 1 transmission per minute
@@ -66,7 +66,7 @@ void print_usage(const char *progname) {
     printf("COSPAS-SARSAT T.001 Beacon Transmitter\n");
     printf("Usage: %s [options]\n\n", progname);
     printf("Options:\n");
-    printf("  -f <freq>     Frequency in Hz (default: 403000000)\n");
+    printf("  -f <freq>     Frequency in Hz (default: 431975000)\n");
     printf("  -g <gain>     TX gain in dB (default: -10)\n");
     printf("  -i <id>       Beacon ID in hex (default: 0x123456)\n");
     printf("  -m <mode>     Mode: 0=exercise, 1=test (default: 0)\n");
@@ -78,8 +78,8 @@ void print_usage(const char *progname) {
     printf("  -gps-uart <dev> GPS UART device (default: %s)\n", GPS_UART_DEFAULT);
     printf("  -h            Show this help\n\n");
     printf("Examples:\n");
-    printf("  %s -f 403000000 -g -10 -m 0 -t 120\n", progname);
-    printf("  %s -gps -f 403000000 -g -10 -m 0 -t 60\n", progname);
+    printf("  %s -f 431975000 -g -10 -m 0 -t 120\n", progname);
+    printf("  %s -gps -f 431975000 -g -10 -m 0 -t 60\n", progname);
 }
 
 int parse_args(int argc, char *argv[], app_config_t *config) {

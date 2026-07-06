@@ -13,8 +13,8 @@
 #define SAMPLES_PER_BIT 16
 #define BASEBAND_RATE 6400  // 400 * 16
 
-// Carrier parameters (403 MHz for training, 406 MHz for real)
-#define CARRIER_FREQUENCY_TRAINING 403000000ULL  // 403 MHz
+// Carrier parameters (431.975 MHz for local tests, 406 MHz for real distress beacons)
+#define CARRIER_FREQUENCY_TRAINING 431975000ULL  // 431.975 MHz
 #define CARRIER_FREQUENCY_REAL     406000000ULL  // 406 MHz
 
 // Timing (T.001 standard)
