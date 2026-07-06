@@ -92,7 +92,7 @@ void print_usage(const char *progname) {
     printf("  -alt <alt>    Altitude in meters (default: 1080)\n");
     printf("  -gps          Enable real-time GPS (overrides lat/lon/alt)\n");
     printf("  -gps-uart <dev> GPS UART device (default: %s)\n", GPS_UART_DEFAULT);
-    printf("  -homing <freq>  AM swept-tone homing between exercise bursts at <freq> Hz\n");
+    printf("  -homing <freq>  ELT swept-tone AM homing between exercise bursts at <freq> Hz\n");
     printf("                  (exercise mode only; stops %.0f s before each burst)\n", HOMING_GUARD_SEC);
     printf("  -h            Show this help\n\n");
     printf("Examples:\n");

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "biphase_modulator.h"   /* iq_sample_t */
 
-// ELT-style homing signal: AM carrier, audio tone swept downward.
+// ELT swept-tone AM homing signal: AM carrier, audio tone swept downward.
 // Sweep 1600 -> 300 Hz, 3 sweeps/s, modulation index 0.90.
 
 #define HOMING_SWEEP_F_START_HZ 1600.0

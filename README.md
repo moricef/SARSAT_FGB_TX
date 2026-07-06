@@ -100,7 +100,7 @@ Options:
 -alt <alt>       Altitude in meters (default: 1080)
 -gps             Enable real-time GPS, overriding fixed lat/lon/alt
 -gps-uart <dev>  GPS serial device (default: /dev/ttyS1)
--homing <freq>   AM swept-tone homing between exercise bursts at <freq> Hz
+-homing <freq>   ELT swept-tone AM homing between exercise bursts at <freq> Hz
                  (exercise mode only; stops 5 s before each burst;
                  TX is primed once before the scheduled loop)
 -h               Show help
@@ -108,6 +108,9 @@ Options:
 
 Note: `-t` is a fixed start-to-start FGB burst period. With homing enabled,
 the homing signal stops 5 s before the next scheduled FGB burst.
+
+`-homing` generates an ELT-like swept-tone AM homing signal compatible with
+published 121.5 MHz homing characteristics; not claimed as DO-183 certified.
 
 ## Offline IQ Generation
 
@@ -228,7 +231,7 @@ Options :
 -alt <alt>       Altitude en mètres (défaut : 1080)
 -gps             Active le GPS temps réel
 -gps-uart <dev>  Port série GPS (défaut : /dev/ttyS1)
--homing <freq>   Homing AM à tonalité balayée entre les bursts d'exercice, à <freq> Hz
+-homing <freq>   Homing AM ELT à tonalité balayée entre les bursts d'exercice, à <freq> Hz
                  (mode exercice uniquement ; s'arrête 5 s avant chaque burst ;
                  le TX est amorcé une fois avant la boucle planifiée)
 -h               Aide
@@ -236,6 +239,10 @@ Options :
 
 Note : `-t` est une période fixe entre débuts de bursts FGB. Avec le homing
 activé, le signal de homing s'arrête 5 s avant le burst FGB planifié suivant.
+
+`-homing` génère un signal de homing AM à tonalité balayée de type ELT,
+compatible avec les caractéristiques publiées du homing 121,5 MHz ; il n'est
+pas revendiqué comme certifié DO-183.
 
 ## Génération IQ
 
