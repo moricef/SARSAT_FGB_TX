@@ -151,25 +151,25 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-# Emetteur COSPAS-SARSAT T.001
+# Émetteur COSPAS-SARSAT T.001
 
-Emetteur de balise COSPAS-SARSAT T.001 de premiere generation base sur ADALM-Pluto, destine aux essais locaux et a la validation de decodeurs.
+Émetteur de balise COSPAS-SARSAT T.001 de première génération basé sur ADALM-Pluto, destiné aux essais locaux et à la validation de décodeurs.
 
-## Etat
+## État
 
 - Compilation Linux avec `gcc` et `libiio`.
-- Generation d'une trame longue T.001 de 144 bits avec validation BCH1/BCH2.
-- Emission I/Q PlutoSDR en BPSK Biphase-L / Manchester.
-- Frequence RF par defaut : `431975000 Hz` (`431.975 MHz`).
-- Sample-rate Pluto : `2457600 sps`, soit exactement `6400 * 384`, pour un debit exact de 400 bauds.
-- GPS temps reel disponible avec `-gps`.
-- Le code GPIO PA/relais/LED existe, mais le chemin TX principal le laisse desactive a cause de problemes de droits.
+- Génération d'une trame longue T.001 de 144 bits avec validation BCH1/BCH2.
+- Émission I/Q PlutoSDR en BPSK Biphase-L / Manchester.
+- Fréquence RF par défaut : `431975000 Hz` (`431.975 MHz`).
+- Sample-rate Pluto : `2457600 sps`, soit exactement `6400 * 384`, pour un débit exact de 400 bauds.
+- GPS temps réel disponible avec `-gps`.
+- Le code GPIO PA/relais/LED existe, mais le chemin TX principal le laisse désactivé à cause de problèmes de droits.
 
-## Securite
+## Sécurité
 
-Ce logiciel peut piloter du materiel RF. Utiliser uniquement des frequences, puissances, antennes et environnements pour lesquels vous etes autorise.
+Ce logiciel peut piloter du matériel RF. Utiliser uniquement des fréquences, puissances, antennes et environnements pour lesquels vous êtes autorisés.
 
-Ne pas emettre sur les frequences de detresse 406 MHz sans equipement certifie et autorisation explicite. La valeur par defaut `431.975 MHz` est prevue pour les essais locaux.
+Ne pas émettre sur les fréquences de détresse 406 MHz sans équipement certifié et autorisation explicite. La valeur par défaut `431.975 MHz` est prévue pour les essais locaux.
 
 ## Compilation
 
@@ -179,7 +179,7 @@ sudo apt install -y build-essential libiio-dev libiio-utils git
 make clean && make
 ```
 
-Generateur IQ hors-ligne :
+Générateur IQ hors-ligne :
 
 ```bash
 make -f Makefile.generate_iq
@@ -187,13 +187,13 @@ make -f Makefile.generate_iq
 
 ## Utilisation
 
-Commande de test local validee :
+Commande de test local validée :
 
 ```bash
 ./bin/sarsat_t001 -f 431975000 -m 1 -g 0 -t 5
 ```
 
-Test a puissance plus faible :
+Test à puissance plus faible :
 
 ```bash
 ./bin/sarsat_t001 -f 431975000 -m 1 -g -10 -t 5
@@ -205,7 +205,7 @@ Mode exercice avec position fixe :
 ./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 60 -lat 42.95463 -lon 1.364479 -alt 1080
 ```
 
-Mode exercice avec GPS temps reel :
+Mode exercice avec GPS temps réel :
 
 ```bash
 ./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 60
@@ -214,26 +214,26 @@ Mode exercice avec GPS temps reel :
 Options :
 
 ```text
--f <freq>        Frequence en Hz (defaut : 431975000)
--g <gain>        Gain TX AD9361 en dB (defaut : -10, 0 = puissance max)
--i <id>          Identifiant balise en hexadecimal (defaut : 0x123456)
--m <mode>        Mode : 0=exercice, 1=test (defaut : 0)
--t <sec>         Attente apres chaque emission (defaut : 60)
--lat <lat>       Latitude (defaut : 42.95463)
--lon <lon>       Longitude (defaut : 1.364479)
--alt <alt>       Altitude en metres (defaut : 1080)
--gps             Active le GPS temps reel
--gps-uart <dev>  Port serie GPS (defaut : /dev/ttyS1)
+-f <freq>        Fréquence en Hz (défaut : 431975000)
+-g <gain>        Gain TX AD9361 en dB (défaut : -10, 0 = puissance max)
+-i <id>          Identifiant balise en hexadécimal (défaut : 0x123456)
+-m <mode>        Mode : 0=exercice, 1=test (défaut : 0)
+-t <sec>         Attente après chaque émission (défaut : 60)
+-lat <lat>       Latitude (défaut : 42.95463)
+-lon <lon>       Longitude (défaut : 1.364479)
+-alt <alt>       Altitude en mètres (défaut : 1080)
+-gps             Active le GPS temps réel
+-gps-uart <dev>  Port série GPS (défaut : /dev/ttyS1)
 -h               Aide
 ```
 
-## Generation IQ
+## Génération IQ
 
 ```bash
 bin/generate_iq_file -o /tmp/sarsat_t001.iq -s 40000
 ```
 
-Le generateur utilise le meme chemin `build_t001_frame()` que l'emetteur, afin d'eviter les trames codees en dur obsoletes.
+Le générateur utilise le même chemin `build_t001_frame()` que l'émetteur, afin d'éviter les trames codées en dur obsolètes.
 
 ## Licence
 
