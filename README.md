@@ -12,7 +12,7 @@ Simulateur d'émetteur de balise COSPAS-SARSAT T.001 (1ère génération) pour f
 - **Timing** : 160 ms porteuse + 360 ms données
 
 ### Hardware
-- **Platform** : Odroid C2 / Odroid M1S (ARM64, Armbian)
+- **Platform** : Odroid C2 / Odroid C4 (ARM64, Armbian)
 - **SDR** : ADALM-PLUTO (PlutoSDR) via USB
 - **RF** : PA 5W + relais TX/RX + LEDs
 
@@ -184,3 +184,5 @@ ls /sys/class/gpio/
 ## 🤝 Contribution
 
 ## 📄 Licence
+
+Ce projet est distribué sous licence MIT. Voir [LICENSE](LICENSE).
