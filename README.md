@@ -94,20 +94,20 @@ Options:
 -g <gain>        AD9361 TX hardware gain in dB (default: -10, 0 = max output)
 -i <id>          Beacon ID in hex (default: 0x123456)
 -m <mode>        Mode: 0=exercise, 1=test (default: 0)
--t <sec>         Burst period, fixed-phase schedule (default: 50)
+-t <sec>         FGB burst period, fixed-phase schedule (default: 50)
 -lat <lat>       Latitude (default: 42.95463)
 -lon <lon>       Longitude (default: 1.364479)
 -alt <alt>       Altitude in meters (default: 1080)
 -gps             Enable real-time GPS, overriding fixed lat/lon/alt
 -gps-uart <dev>  GPS serial device (default: /dev/ttyS1)
--homing <freq>   AM swept-tone homing between bursts at <freq> Hz
+-homing <freq>   AM swept-tone homing between exercise bursts at <freq> Hz
                  (exercise mode only; stops 5 s before each burst;
-                 note: the very first burst after program start is
-                 ~1 s long and may be rejected by decoders)
+                 TX is primed once before the scheduled loop)
 -h               Show help
 ```
 
-Note: `-t` is the sleep time after a blocking transmission. The start-to-start interval is therefore roughly `-t` plus the burst duration and margins.
+Note: `-t` is a fixed start-to-start FGB burst period. With homing enabled,
+the homing signal stops 5 s before the next scheduled FGB burst.
 
 ## Offline IQ Generation
 
@@ -222,18 +222,20 @@ Options :
 -g <gain>        Gain TX AD9361 en dB (défaut : -10, 0 = puissance max)
 -i <id>          Identifiant balise en hexadécimal (défaut : 0x123456)
 -m <mode>        Mode : 0=exercice, 1=test (défaut : 0)
--t <sec>         Période des bursts, cadence à phase fixe (défaut : 50)
+-t <sec>         Période des bursts FGB, cadence à phase fixe (défaut : 50)
 -lat <lat>       Latitude (défaut : 42.95463)
 -lon <lon>       Longitude (défaut : 1.364479)
 -alt <alt>       Altitude en mètres (défaut : 1080)
 -gps             Active le GPS temps réel
 -gps-uart <dev>  Port série GPS (défaut : /dev/ttyS1)
--homing <freq>   Homing AM à tonalité balayée entre les bursts, à <freq> Hz
+-homing <freq>   Homing AM à tonalité balayée entre les bursts d'exercice, à <freq> Hz
                  (mode exercice uniquement ; s'arrête 5 s avant chaque burst ;
-                 note : le premier burst après démarrage dure ~1 s et peut
-                 être rejeté par les décodeurs)
+                 le TX est amorcé une fois avant la boucle planifiée)
 -h               Aide
 ```
+
+Note : `-t` est une période fixe entre débuts de bursts FGB. Avec le homing
+activé, le signal de homing s'arrête 5 s avant le burst FGB planifié suivant.
 
 ## Génération IQ
 

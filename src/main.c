@@ -86,13 +86,13 @@ void print_usage(const char *progname) {
     printf("  -g <gain>     TX gain in dB (default: -10)\n");
     printf("  -i <id>       Beacon ID in hex (default: 0x123456)\n");
     printf("  -m <mode>     Mode: 0=exercise, 1=test (default: 0)\n");
-    printf("  -t <sec>      TX interval in seconds (default: 50)\n");
+    printf("  -t <sec>      FGB burst period in seconds (default: 50)\n");
     printf("  -lat <lat>    Latitude (default: 42.95463)\n");
     printf("  -lon <lon>    Longitude (default: 1.364479)\n");
     printf("  -alt <alt>    Altitude in meters (default: 1080)\n");
     printf("  -gps          Enable real-time GPS (overrides lat/lon/alt)\n");
     printf("  -gps-uart <dev> GPS UART device (default: %s)\n", GPS_UART_DEFAULT);
-    printf("  -homing <freq>  AM swept-tone homing between bursts at <freq> Hz\n");
+    printf("  -homing <freq>  AM swept-tone homing between exercise bursts at <freq> Hz\n");
     printf("                  (exercise mode only; stops %.0f s before each burst)\n", HOMING_GUARD_SEC);
     printf("  -h            Show this help\n\n");
     printf("Examples:\n");
@@ -252,12 +252,18 @@ int main(int argc, char *argv[]) {
     if (!pluto_configure_tx(pluto, config.frequency, PLUTO_SAMPLE_RATE, config.tx_gain_db)) {
         fprintf(stderr, "TX configuration failed\n");
         pluto_cleanup(pluto);
+        if (gps) gps_cleanup(gps);
         // gpio_cleanup();
         return 1;
     }
 
     // Prime the TX DMA so the first burst starts clean
-    pluto_prime_tx(pluto);
+    if (!pluto_prime_tx(pluto)) {
+        fprintf(stderr, "TX DMA priming failed\n");
+        pluto_cleanup(pluto);
+        if (gps) gps_cleanup(gps);
+        return 1;
+    }
 
     // Homing: exercise mode only, and the cycle must leave room for the
     // guard plus the burst itself.
@@ -277,9 +283,19 @@ int main(int argc, char *argv[]) {
         }
         // Pre-touch the homing frequency once: the first LO calibration at a
         // new band is slow, do it now (TX idle) instead of after burst #1.
-        pluto_set_tx_frequency(pluto, config.homing_freq);
+        if (!pluto_set_tx_frequency(pluto, config.homing_freq)) {
+            fprintf(stderr, "Failed to pre-tune homing frequency\n");
+            pluto_cleanup(pluto);
+            if (gps) gps_cleanup(gps);
+            return 1;
+        }
         usleep(300000);
-        pluto_set_tx_frequency(pluto, config.frequency);
+        if (!pluto_set_tx_frequency(pluto, config.frequency)) {
+            fprintf(stderr, "Failed to restore FGB frequency after homing pre-tune\n");
+            pluto_cleanup(pluto);
+            if (gps) gps_cleanup(gps);
+            return 1;
+        }
         usleep(300000);
 
         homing_wf = homing_generate_sweep(PLUTO_SAMPLE_RATE, 1600, &homing_len);
@@ -330,16 +346,25 @@ int main(int argc, char *argv[]) {
 
         // Homing window: from end of burst to next_due - guard
         if (config.homing_freq && running) {
-            pluto_set_tx_frequency(pluto, config.homing_freq);
+            if (!pluto_set_tx_frequency(pluto, config.homing_freq)) {
+                fprintf(stderr, "Failed to tune homing frequency\n");
+                break;
+            }
             usleep(200000);   // LO settle before the first homing segment
             double window = (next_due - HOMING_GUARD_SEC) - mono_s();
             if (window > 0.5) {
                 printf("Homing %.1f s at %.6f MHz...\n",
                        window, config.homing_freq / 1e6);
-                pluto_homing_run(pluto, homing_wf, homing_len, window, &running);
+                if (!pluto_homing_run(pluto, homing_wf, homing_len, window, &running)) {
+                    fprintf(stderr, "Homing transmission failed\n");
+                    break;
+                }
             }
             // Back to FGB early in the guard: retune + settling + silence
-            pluto_set_tx_frequency(pluto, config.frequency);
+            if (!pluto_set_tx_frequency(pluto, config.frequency)) {
+                fprintf(stderr, "Failed to restore FGB frequency after homing\n");
+                break;
+            }
         }
 
         // Guard window: refresh GPS, rebuild frame, regenerate waveform.
