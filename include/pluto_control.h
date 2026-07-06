@@ -69,6 +69,27 @@ bool pluto_transmit_t001_frame_simple(pluto_ctx_t *ctx,
                                       const uint8_t *frame_bits);
 
 // =============================
+// Homing (segment-based, non-cyclic)
+// =============================
+
+// Retune TX LO only (no sample rate / gain change)
+bool pluto_set_tx_frequency(pluto_ctx_t *ctx, uint64_t freq);
+
+// Push a short zero buffer to prime the TX DMA path. Call once after
+// pluto_configure_tx: without it the very first burst carries ~0.5 s of
+// spurious output ahead of it (observed 1.09 s instead of 0.52 s).
+bool pluto_prime_tx(pluto_ctx_t *ctx);
+
+// Play a waveform segment back-to-back for `seconds`, using one normal
+// (non-cyclic) TX buffer pushed repeatedly. Blocks until drained; checks
+// *running at each segment for early stop. No cyclic buffer involved.
+bool pluto_homing_run(pluto_ctx_t *ctx,
+                      const iq_sample_t *samples,
+                      size_t num_samples,
+                      double seconds,
+                      const volatile bool *running);
+
+// =============================
 // Utility Functions
 // =============================
 

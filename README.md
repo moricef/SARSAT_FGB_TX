@@ -78,13 +78,13 @@ Lower-power local test:
 Exercise mode with fixed position:
 
 ```bash
-./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 60 -lat 42.95463 -lon 1.364479 -alt 1080
+./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 50 -lat 42.95463 -lon 1.364479 -alt 1080
 ```
 
 Exercise mode with real-time GPS:
 
 ```bash
-./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 60
+./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 50
 ```
 
 Options:
@@ -94,12 +94,16 @@ Options:
 -g <gain>        AD9361 TX hardware gain in dB (default: -10, 0 = max output)
 -i <id>          Beacon ID in hex (default: 0x123456)
 -m <mode>        Mode: 0=exercise, 1=test (default: 0)
--t <sec>         Wait time after each transmission (default: 60)
+-t <sec>         Burst period, fixed-phase schedule (default: 50)
 -lat <lat>       Latitude (default: 42.95463)
 -lon <lon>       Longitude (default: 1.364479)
 -alt <alt>       Altitude in meters (default: 1080)
 -gps             Enable real-time GPS, overriding fixed lat/lon/alt
 -gps-uart <dev>  GPS serial device (default: /dev/ttyS1)
+-homing <freq>   AM swept-tone homing between bursts at <freq> Hz
+                 (exercise mode only; stops 5 s before each burst;
+                 note: the very first burst after program start is
+                 ~1 s long and may be rejected by decoders)
 -h               Show help
 ```
 
@@ -202,13 +206,13 @@ Test à puissance plus faible :
 Mode exercice avec position fixe :
 
 ```bash
-./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 60 -lat 42.95463 -lon 1.364479 -alt 1080
+./bin/sarsat_t001 -f 431975000 -m 0 -g -10 -t 50 -lat 42.95463 -lon 1.364479 -alt 1080
 ```
 
 Mode exercice avec GPS temps réel :
 
 ```bash
-./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 60
+./bin/sarsat_t001 -gps -gps-uart /dev/ttyS1 -f 431975000 -m 0 -g -10 -t 50
 ```
 
 Options :
@@ -218,12 +222,16 @@ Options :
 -g <gain>        Gain TX AD9361 en dB (défaut : -10, 0 = puissance max)
 -i <id>          Identifiant balise en hexadécimal (défaut : 0x123456)
 -m <mode>        Mode : 0=exercice, 1=test (défaut : 0)
--t <sec>         Attente après chaque émission (défaut : 60)
+-t <sec>         Période des bursts, cadence à phase fixe (défaut : 50)
 -lat <lat>       Latitude (défaut : 42.95463)
 -lon <lon>       Longitude (défaut : 1.364479)
 -alt <alt>       Altitude en mètres (défaut : 1080)
 -gps             Active le GPS temps réel
 -gps-uart <dev>  Port série GPS (défaut : /dev/ttyS1)
+-homing <freq>   Homing AM à tonalité balayée entre les bursts, à <freq> Hz
+                 (mode exercice uniquement ; s'arrête 5 s avant chaque burst ;
+                 note : le premier burst après démarrage dure ~1 s et peut
+                 être rejeté par les décodeurs)
 -h               Aide
 ```
 

@@ -22,7 +22,8 @@ SOURCES = $(SRC_DIR)/main.c \
           $(SRC_DIR)/bessel_filter.c \
           $(SRC_DIR)/pluto_control.c \
           $(SRC_DIR)/gpio_control.c \
-          $(SRC_DIR)/gps_nmea.c
+          $(SRC_DIR)/gps_nmea.c \
+          $(SRC_DIR)/homing_generator.c
 
 # Object files
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
@@ -33,7 +34,8 @@ HEADERS = $(INC_DIR)/t001_protocol.h \
           $(INC_DIR)/bessel_filter.h \
           $(INC_DIR)/pluto_control.h \
           $(INC_DIR)/gpio_control.h \
-          $(INC_DIR)/gps_nmea.h
+          $(INC_DIR)/gps_nmea.h \
+          $(INC_DIR)/homing_generator.h
 
 # Default target
 all: directories $(TARGET)

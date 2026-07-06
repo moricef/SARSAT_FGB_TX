@@ -280,6 +280,78 @@ bool pluto_transmit_t001_frame_simple(pluto_ctx_t *pluto,
 }
 
 // =============================
+// Homing (segment-based, non-cyclic)
+// =============================
+
+bool pluto_set_tx_frequency(pluto_ctx_t *pluto, uint64_t freq) {
+    if (!pluto || !pluto->ctx) return false;
+
+    struct iio_device *phy = iio_context_find_device(pluto->ctx, "ad9361-phy");
+    if (!phy) return false;
+
+    struct iio_channel *tx_lo = iio_device_find_channel(phy, "altvoltage1", true);
+    if (!tx_lo) return false;
+
+    return set_param(tx_lo, "frequency", (long long)freq);
+}
+
+bool pluto_prime_tx(pluto_ctx_t *pluto) {
+    if (!pluto || !pluto->tx_dev) return false;
+
+    /* One full second of zeros: shorter primes (16k samples) left ~0.5 s of
+       spurious output ahead of the first burst. */
+    size_t n = PLUTO_SAMPLE_RATE;
+    struct iio_buffer *zb = iio_device_create_buffer(pluto->tx_dev, n, false);
+    if (!zb) return false;
+
+    memset(iio_buffer_start(zb), 0, n * 2 * sizeof(int16_t));
+    iio_buffer_push(zb);
+    usleep((n * 1000000ULL) / PLUTO_SAMPLE_RATE + 10000);
+    iio_buffer_destroy(zb);
+    return true;
+}
+
+bool pluto_homing_run(pluto_ctx_t *pluto,
+                      const iq_sample_t *samples,
+                      size_t num_samples,
+                      double seconds,
+                      const volatile bool *running) {
+    if (!pluto || !pluto->tx_dev || !samples || num_samples == 0 || seconds <= 0.0)
+        return false;
+
+    struct iio_buffer *buf = iio_device_create_buffer(pluto->tx_dev, num_samples, false);
+    if (!buf) {
+        fprintf(stderr, "Failed to create homing TX buffer (%zu samples)\n", num_samples);
+        return false;
+    }
+
+    int16_t *raw = (int16_t *)iio_buffer_start(buf);
+    for (size_t i = 0; i < num_samples; i++) {
+        raw[2*i]     = samples[i].i;
+        raw[2*i + 1] = samples[i].q;
+    }
+
+    // Each push queues one segment; iio_buffer_push blocks when the kernel
+    // queue is full, so the loop is paced by the hardware.
+    double seg_s = (double)num_samples / (double)PLUTO_SAMPLE_RATE;
+    unsigned n_segments = (unsigned)(seconds / seg_s);
+
+    for (unsigned k = 0; k < n_segments && (!running || *running); k++) {
+        ssize_t nb = iio_buffer_push(buf);
+        if (nb < 0) {
+            fprintf(stderr, "Homing push failed: %s\n", strerror((int)-nb));
+            iio_buffer_destroy(buf);
+            return false;
+        }
+    }
+
+    // Let the last queued segment drain, then release (clean idle after)
+    usleep((useconds_t)(seg_s * 1e6) + 20000);
+    iio_buffer_destroy(buf);
+    return true;
+}
+
+// =============================
 // Utility Functions
 // =============================
 
