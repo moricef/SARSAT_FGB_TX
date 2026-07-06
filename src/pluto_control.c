@@ -133,10 +133,9 @@ bool pluto_configure_tx(pluto_ctx_t *pluto,
         return false;
     }
 
-    // Set TX gain (attenuation in dB, negative value)
-    // PlutoSDR uses hardware gain: 0 dB = max power
-    int hw_gain = -tx_gain_db * 1000;  // Convert to millidB
-    if (!set_param(tx_chan, "hardwaregain", hw_gain)) {
+    // AD9361 exposes TX hardwaregain in dB. Values are typically negative,
+    // with 0 dB being maximum output power.
+    if (!set_param(tx_chan, "hardwaregain", tx_gain_db)) {
         return false;
     }
 
@@ -205,7 +204,6 @@ bool pluto_transmit_iq(pluto_ctx_t *pluto,
     printf("Transmitted %zu I/Q samples (%zd bytes)\n", num_samples, nbytes_tx);
 
     // Wait for transmission to complete (duration + margin)
-    // At 2.5 MSPS: 1298560 samples = 519.4 ms
     usleep((num_samples * 1000000ULL / PLUTO_SAMPLE_RATE) + 50000);
 
     // Cleanup buffer

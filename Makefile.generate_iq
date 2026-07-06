@@ -1,0 +1,33 @@
+# Makefile pour generate_iq_file
+# Génère un fichier IQ COSPAS-SARSAT T.001
+
+CC = gcc
+CFLAGS = -Wall -Wextra -O2 -Iinclude
+LDFLAGS = -lm
+
+# Source files
+SRC_DIR = src
+INC_DIR = include
+BIN_DIR = bin
+
+# Sources nécessaires
+SRCS = generate_iq_file.c \
+       $(SRC_DIR)/t001_protocol.c \
+       $(SRC_DIR)/biphase_modulator.c \
+       $(SRC_DIR)/bessel_filter.c
+
+# Output
+TARGET = $(BIN_DIR)/generate_iq_file
+
+# Build
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "✓ Compilé: $@"
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean

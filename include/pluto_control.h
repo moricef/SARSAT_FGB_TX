@@ -18,8 +18,8 @@
 #define PLUTO_FREQ_TRAINING 403000000ULL  // 403 MHz (training/exercise)
 #define PLUTO_FREQ_REAL     406000000ULL  // 406 MHz (real emergency)
 
-// Sample rate
-#define PLUTO_SAMPLE_RATE 2500000  // 2.5 MSPS
+// Sample rate: exact multiple of 6400 Hz baseband for exact 400 baud timing.
+#define PLUTO_SAMPLE_RATE 2457600  // 2.4576 MSPS
 
 // TX gain settings (dBm)
 #define PLUTO_GAIN_LOW  -10   // Low power for training

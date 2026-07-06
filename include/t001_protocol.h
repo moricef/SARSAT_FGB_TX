@@ -20,12 +20,14 @@
 #define BCH1_DATA_BITS  61
 
 #define BCH2_POLY       0x1539    // 13-bit (X^12 + ... + 1)
-#define BCH2_POLY_MASK  0x0FFF    // 12-bit mask
+#define BCH2_POLY_MASK  0x1FFF    // 13-bit working register; remainder fits in 12 bits.
+                                  // 0x0FFF leaked a spurious bit 12 on ~50% of inputs,
+                                  // breaking validate_t001_frame against the 12-bit field.
 #define BCH2_DEGREE     12
 #define BCH2_DATA_BITS  26
 
 // Frame sync patterns
-#define SYNC_NORMAL_LONG 0x017  // 000101111 (9 bits MSB-first)
+#define SYNC_NORMAL_LONG 0x02F  // 000101111 (9 bits MSB-first)
 #define SYNC_SELF_TEST   0x0D0  // 011010000 (9 bits MSB-first)
 
 // Country code (France)

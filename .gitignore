@@ -27,3 +27,6 @@ vgcore.*
 # Temporary files
 *.tmp
 *.bak
+
+# Generated IQ files
+*.iq

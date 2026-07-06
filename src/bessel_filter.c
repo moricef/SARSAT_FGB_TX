@@ -1,15 +1,16 @@
 #include "bessel_filter.h"
 #include <string.h>
 
-// Bessel IIR filter coefficients (order 2, Fc=800kHz, Fs=2.5MHz)
-// Equivalent to analog Bessel Active Filter used in dsPIC33 project
-// Direct Form II implementation: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+// Bessel IIR order 2, Fc = 2.2 kHz, Fs = 2.4576 MHz (bilinear transform, prewarped)
+// Measured on generated waveform: phase transition tr(10-90%) = 100 us
+// (T.001 §2.3 Fig 2.6, ELT(DT): 50-150 us). DC gain = 1, -0.37 dB @ 800 Hz.
+// Direct Form I: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
 
-static const float b0 = 0.2693698845f;
-static const float b1 = 0.5387397691f;
-static const float b2 = 0.2693698845f;
-static const float a1 = 0.0056757937f;
-static const float a2 = 0.0718037444f;
+static const float b0 = 1.2718166211e-05f;
+static const float b1 = 2.5436332423e-05f;
+static const float b2 = 1.2718166211e-05f;
+static const float a1 = -1.9876334359f;
+static const float a2 = 0.9876843086f;
 
 void bessel_init(bessel_state_t *state) {
     // Clear state variables (Direct Form II)

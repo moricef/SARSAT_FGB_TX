@@ -21,9 +21,10 @@
 #define CARRIER_DURATION_MS 160  // Unmodulated carrier
 #define MESSAGE_DURATION_MS 360  // BPSK data
 
-// PlutoSDR interpolation (2.5 MSPS output)
-#define PLUTO_SAMPLE_RATE 2500000  // 2.5 MSPS
-#define INTERPOLATION_FACTOR (PLUTO_SAMPLE_RATE / BASEBAND_RATE)  // 390.625
+// PlutoSDR interpolation. Keep this an exact multiple of BASEBAND_RATE
+// so 400 baud timing stays exact.
+#define PLUTO_SAMPLE_RATE 2457600  // 2.4576 MSPS = 6400 * 384
+#define INTERPOLATION_FACTOR (PLUTO_SAMPLE_RATE / BASEBAND_RATE)
 
 // I/Q sample structure (16-bit signed for PlutoSDR)
 typedef struct {

@@ -59,8 +59,8 @@ void modulate_bpsk_iq(const int16_t *baseband, size_t num_baseband_samples,
         int16_t i_val = (int16_t)(IQ_AMPLITUDE * cos(phase));
         int16_t q_val = (int16_t)(IQ_AMPLITUDE * sin(phase));
 
-        // Simple interpolation: repeat each sample INTERPOLATION_FACTOR times
-        // (Can be improved with proper FIR filter)
+        // Simple interpolation: repeat each sample INTERPOLATION_FACTOR times.
+        // PLUTO_SAMPLE_RATE is chosen so this is an integer and preserves baud.
         for (int interp = 0; interp < INTERPOLATION_FACTOR; interp++) {
             iq_samples[iq_idx].i = i_val;
             iq_samples[iq_idx].q = q_val;
@@ -112,7 +112,7 @@ void generate_t001_waveform(const uint8_t *frame_bits,
     size_t actual_baseband_samples = 0;
     generate_biphase_baseband(frame_bits, 144, baseband, &actual_baseband_samples);
 
-    // 3. Modulate to I/Q (interpolate to 2.5 MSPS)
+    // 3. Modulate to I/Q (interpolate to PLUTO_SAMPLE_RATE)
     size_t iq_data_samples = 0;
     iq_sample_t *iq_data = malloc(actual_baseband_samples * INTERPOLATION_FACTOR * sizeof(iq_sample_t));
     if (!iq_data) {
@@ -125,32 +125,21 @@ void generate_t001_waveform(const uint8_t *frame_bits,
 
     modulate_bpsk_iq(baseband, actual_baseband_samples, iq_data, &iq_data_samples);
 
-    // 4. Apply Bessel filter to remove interpolation artifacts
-    // Equivalent to analog Bessel Active Filter (dsPIC33 project)
-    // Order 2, Fc=800kHz - preserves Biphase-L signal shape
-    iq_sample_t *filtered_data = malloc(iq_data_samples * sizeof(iq_sample_t));
-    if (!filtered_data) {
-        free(baseband);
-        free(iq_data);
-        free(*waveform);
-        *waveform = NULL;
-        *waveform_length = 0;
-        return;
+    // 4. Append raw modulated data to waveform (after carrier)
+    for (size_t i = 0; i < iq_data_samples && wf_idx < total_samples; i++) {
+        (*waveform)[wf_idx++] = iq_data[i];
     }
 
+    // 5. Bessel filter over the whole burst (carrier + data), in place.
+    // Filtering data alone from zero state caused an amplitude transient
+    // at message start. bessel_process is in-place safe.
     bessel_state_t bessel_state;
     bessel_init(&bessel_state);
-    bessel_process(&bessel_state, iq_data, filtered_data, iq_data_samples);
-
-    // 5. Copy filtered data to waveform
-    for (size_t i = 0; i < iq_data_samples && wf_idx < total_samples; i++) {
-        (*waveform)[wf_idx++] = filtered_data[i];
-    }
+    bessel_process(&bessel_state, *waveform, *waveform, wf_idx);
 
     // Cleanup
     free(baseband);
     free(iq_data);
-    free(filtered_data);
 
     *waveform_length = wf_idx;
 }
